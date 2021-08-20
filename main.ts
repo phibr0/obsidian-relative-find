@@ -12,12 +12,8 @@ export default class MyPlugin extends Plugin {
 		this.addCommand({
 			id: 'relative-find',
 			name: 'Find relative to Cursor Position',
-			editorCheckCallback: (checking: boolean, editor: Editor) => {
-				if (!checking) {
+			editorCallback: (editor: Editor) => {
 					new SearchModal(this.app, editor, "after").open();
-				}
-				return true;
-				return false;
 			}
 		});
 	}
