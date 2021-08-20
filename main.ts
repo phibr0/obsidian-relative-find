@@ -1,4 +1,4 @@
-import { App, Editor, MarkdownView, Plugin, SuggestModal } from 'obsidian';
+import { App, Editor, Plugin, SuggestModal } from 'obsidian';
 
 interface SearchResult {
 	text: string;
@@ -12,14 +12,11 @@ export default class MyPlugin extends Plugin {
 		this.addCommand({
 			id: 'relative-find',
 			name: 'Find relative to Cursor Position',
-			checkCallback: (checking: boolean) => {
-				let leaf = this.app.workspace.activeLeaf;
-				if (leaf.view instanceof MarkdownView && leaf.getViewState().state.mode === "source") {
-					if (!checking) {
-						new SearchModal(this.app, leaf.view.editor, "after").open();
-					}
-					return true;
+			editorCheckCallback: (checking: boolean, editor: Editor) => {
+				if (!checking) {
+					new SearchModal(this.app, editor, "after").open();
 				}
+				return true;
 				return false;
 			}
 		});
@@ -29,11 +26,12 @@ export default class MyPlugin extends Plugin {
 class SearchModal extends SuggestModal<SearchResult> {
 	editor: Editor;
 	currentQuery: string;
+	defaultMode: string;
 
 	constructor(app: App, editor: Editor, mode: SearchMode) {
 		super(app);
 		this.editor = editor;
-		this.inputEl.value = mode;
+		this.defaultMode = mode;
 		this.setPlaceholder("Search for something...");
 		this.setInstructions([
 			{
@@ -53,6 +51,11 @@ class SearchModal extends SuggestModal<SearchResult> {
 				purpose: "to jump to result",
 			},
 		]);
+	}
+
+	onOpen() {
+		super.onOpen();
+		this.inputEl.value = `${this.defaultMode}:`;
 	}
 
 	getSuggestions(query: string): SearchResult[] {
@@ -110,12 +113,14 @@ class SearchModal extends SuggestModal<SearchResult> {
 		const queryEl = createEl("span", { text: this.currentQuery, cls: "RF-query" });
 		queryEl.toggleClass("RF-has-space-end", this.currentQuery.endsWith(" "));
 
+		const infoEl = createEl("span", { text: `Line: ${suggestion.pos.line + 1} - Character: ${suggestion.pos.ch}`, cls: "RF-info" })
+
 		const resultEl = createEl("span", { text: suggestion.text, cls: "RF-result" });
 		resultEl.toggleClass("RF-has-space-beginning", suggestion.text.startsWith(" "));
 		resultEl.prepend(queryEl);
 
 		el.addClass("RF-suggestion");
-		el.append(resultEl);
+		el.append(resultEl, infoEl);
 	}
 
 	onNoSuggestion() {

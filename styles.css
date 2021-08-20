@@ -10,13 +10,14 @@ span.RF-result {
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
+    text-align: justify;
     line-height: 1.5em;
-    height: 1.5em;
-    transition: 150ms ease-in-out; 
+    max-height: 1.5em;
+    /* transition: 150ms ease-out; */
 }
 
 .is-selected span.RF-result {
-    height: 4.5em;
+    max-height: 3em;
     white-space: normal;
 }
 
@@ -28,7 +29,19 @@ span.RF-query.RF-has-space-end {
     margin-right: 0.2em;
 }
 
+span.RF-info {
+    font-size: 0.8em;
+    color: var(--text-muted);
+    text-align: end;
+    display: none;
+}
+
+.is-selected span.RF-info {
+    display: block;
+}
+
 div.RF-suggestion {
     display: flex;
+    flex-flow: column;
     padding-left: 2px;
 }
