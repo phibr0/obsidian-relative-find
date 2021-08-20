@@ -1,112 +1,132 @@
-import { App, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, Editor, MarkdownView, Plugin, SuggestModal } from 'obsidian';
 
-interface MyPluginSettings {
-	mySetting: string;
+interface SearchResult {
+	text: string;
+	pos: CodeMirror.Position;
 }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
-}
+type SearchMode = "before" | "after";
 
 export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
-
-	async onload() {
-		console.log('loading plugin');
-
-		await this.loadSettings();
-
-		this.addRibbonIcon('dice', 'Sample Plugin', () => {
-			new Notice('This is a notice!');
-		});
-
-		this.addStatusBarItem().setText('Status Bar Text');
-
+	onload() {
 		this.addCommand({
-			id: 'open-sample-modal',
-			name: 'Open Sample Modal',
-			// callback: () => {
-			// 	console.log('Simple Callback');
-			// },
+			id: 'relative-find',
+			name: 'Find relative to Cursor Position',
 			checkCallback: (checking: boolean) => {
 				let leaf = this.app.workspace.activeLeaf;
-				if (leaf) {
+				if (leaf.view instanceof MarkdownView && leaf.getViewState().state.mode === "source") {
 					if (!checking) {
-						new SampleModal(this.app).open();
+						new SearchModal(this.app, leaf.view.editor, "after").open();
 					}
 					return true;
 				}
 				return false;
 			}
 		});
-
-		this.addSettingTab(new SampleSettingTab(this.app, this));
-
-		this.registerCodeMirror((cm: CodeMirror.Editor) => {
-			console.log('codemirror', cm);
-		});
-
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
-		});
-
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
-	}
-
-	onunload() {
-		console.log('unloading plugin');
-	}
-
-	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-	}
-
-	async saveSettings() {
-		await this.saveData(this.settings);
 	}
 }
 
-class SampleModal extends Modal {
-	constructor(app: App) {
+class SearchModal extends SuggestModal<SearchResult> {
+	editor: Editor;
+	currentQuery: string;
+
+	constructor(app: App, editor: Editor, mode: SearchMode) {
 		super(app);
+		this.editor = editor;
+		this.inputEl.value = mode;
+		this.setPlaceholder("Search for something...");
+		this.setInstructions([
+			{
+				command: "after:",
+				purpose: "to find after cursor",
+			},
+			{
+				command: "before:",
+				purpose: "to find before cursor",
+			},
+			{
+				command: "↑↓",
+				purpose: "to navigate"
+			},
+			{
+				command: "↵",
+				purpose: "to jump to result",
+			},
+		]);
 	}
 
-	onOpen() {
-		let {contentEl} = this;
-		contentEl.setText('Woah!');
+	getSuggestions(query: string): SearchResult[] {
+		const mode = query.split(":").first() as SearchMode;
+		query = query.replace(mode + ":", "");
+		if (query) {
+			const results: SearchResult[] = [];
+			this.currentQuery = query;
+			for (let i = 0; i < this.editor.lineCount(); i++) {
+				let line = this.editor.getLine(i);
+				let intermediateResults = line.split(query);
+				intermediateResults.remove(intermediateResults.first());
+				intermediateResults.forEach((res) => {
+					results.push({
+						text: res,
+						pos: {
+							line: i,
+							ch: line.indexOf(res),
+						},
+					});
+				});
+			}
+			return this.sortSuggestions(results, mode);
+		}
+		return [];
 	}
 
-	onClose() {
-		let {contentEl} = this;
-		contentEl.empty();
+	sortSuggestions(suggestions: SearchResult[], mode: SearchMode): SearchResult[] {
+		const { line, ch } = this.editor.getCursor();
+		switch (mode) {
+			case "after":
+				return suggestions.filter((s) => {
+					if (s.pos.line < line) {
+						return false;
+					} else if (s.pos.line === line && s.pos.ch < ch) {
+						return false;
+					}
+					return true;
+				});
+			case "before":
+				return suggestions.filter((s) => {
+					if (s.pos.line > line) {
+						return false;
+					} else if (s.pos.line === line && s.pos.ch > ch) {
+						return false;
+					}
+					return true;
+				}).reverse();
+			default:
+				return suggestions;
+		}
 	}
-}
 
-class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
+	renderSuggestion(suggestion: SearchResult, el: HTMLElement) {
+		const queryEl = createEl("span", { text: this.currentQuery, cls: "RF-query" });
+		queryEl.toggleClass("RF-has-space-end", this.currentQuery.endsWith(" "));
 
-	constructor(app: App, plugin: MyPlugin) {
-		super(app, plugin);
-		this.plugin = plugin;
+		const resultEl = createEl("span", { text: suggestion.text, cls: "RF-result" });
+		resultEl.toggleClass("RF-has-space-beginning", suggestion.text.startsWith(" "));
+		resultEl.prepend(queryEl);
+
+		el.addClass("RF-suggestion");
+		el.append(resultEl);
 	}
 
-	display(): void {
-		let {containerEl} = this;
+	onNoSuggestion() {
+		this.resultContainerEl.empty();
+		this.resultContainerEl.appendChild(createDiv({
+			text: "Nothing found.",
+			cls: "suggestion-empty"
+		}));
+	}
 
-		containerEl.empty();
-
-		containerEl.createEl('h2', {text: 'Settings for my awesome plugin.'});
-
-		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
-			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue('')
-				.onChange(async (value) => {
-					console.log('Secret: ' + value);
-					this.plugin.settings.mySetting = value;
-					await this.plugin.saveSettings();
-				}));
+	onChooseSuggestion(item: SearchResult) {
+		this.editor.setCursor(item.pos);
 	}
 }

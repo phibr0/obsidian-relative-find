@@ -1,4 +1,34 @@
-/* Sets all the text color to red! */
-body {
-    color: red;
+span.RF-query {
+    background-color: var(--text-highlight-bg);
+    border-radius: 0.25rem;
+    padding: 0 3px;
+    white-space: nowrap;
+}
+
+span.RF-result {
+    display: block;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    line-height: 1.5em;
+    height: 1.5em;
+    transition: 150ms ease-in-out; 
+}
+
+.is-selected span.RF-result {
+    height: 4.5em;
+    white-space: normal;
+}
+
+span.RF-result.RF-has-space-beginning {
+    margin-left: 0.2em;
+}
+
+span.RF-query.RF-has-space-end {
+    margin-right: 0.2em;
+}
+
+div.RF-suggestion {
+    display: flex;
+    padding-left: 2px;
 }
