@@ -7,7 +7,7 @@ interface SearchResult {
 
 type SearchMode = "before" | "after";
 
-export default class MyPlugin extends Plugin {
+export default class BetterFindPlugin extends Plugin {
 	onload() {
 		this.addCommand({
 			id: 'relative-find',
@@ -113,7 +113,10 @@ class SearchModal extends SuggestModal<SearchResult> {
 		resultEl.toggleClass("RF-has-space-beginning", suggestion.text.startsWith(" "));
 		resultEl.prepend(queryEl);
 
-		const infoEl = createEl("span", { text: `Line: ${suggestion.pos.line + 1} - Character: ${suggestion.pos.ch}`, cls: "RF-info" });
+		const infoEl = createEl("span", {
+			text: `Line: ${suggestion.pos.line + 1} - Character: ${suggestion.pos.ch}`,
+			cls: "RF-info"
+		});
 
 		el.addClass("RF-suggestion");
 		el.append(resultEl, infoEl);
@@ -129,5 +132,9 @@ class SearchModal extends SuggestModal<SearchResult> {
 
 	onChooseSuggestion(item: SearchResult) {
 		this.editor.setCursor(item.pos);
+		this.editor.setSelection({
+			line: item.pos.line,
+			ch: item.pos.ch - this.currentQuery.length,
+		}, item.pos);
 	}
 }
