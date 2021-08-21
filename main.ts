@@ -109,11 +109,11 @@ class SearchModal extends SuggestModal<SearchResult> {
 		const queryEl = createEl("span", { text: this.currentQuery, cls: "RF-query" });
 		queryEl.toggleClass("RF-has-space-end", this.currentQuery.endsWith(" "));
 
-		const infoEl = createEl("span", { text: `Line: ${suggestion.pos.line + 1} - Character: ${suggestion.pos.ch}`, cls: "RF-info" })
-
 		const resultEl = createEl("span", { text: suggestion.text, cls: "RF-result" });
 		resultEl.toggleClass("RF-has-space-beginning", suggestion.text.startsWith(" "));
 		resultEl.prepend(queryEl);
+
+		const infoEl = createEl("span", { text: `Line: ${suggestion.pos.line + 1} - Character: ${suggestion.pos.ch}`, cls: "RF-info" });
 
 		el.addClass("RF-suggestion");
 		el.append(resultEl, infoEl);
