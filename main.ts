@@ -62,6 +62,9 @@ class SearchModal extends SuggestModal<SearchResult> {
 			this.currentQuery = query;
 			for (let i = 0; i < this.editor.lineCount(); i++) {
 				let line = this.editor.getLine(i);
+				if(!line.endsWith(" ")) {
+					line += " ";
+				}
 				let intermediateResults = line.toLowerCase().split(query.toLowerCase());
 				intermediateResults.remove(intermediateResults.first());
 				intermediateResults.forEach((res) => {
