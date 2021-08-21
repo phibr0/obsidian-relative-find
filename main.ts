@@ -69,7 +69,7 @@ class SearchModal extends SuggestModal<SearchResult> {
 						text: res,
 						pos: {
 							line: i,
-							ch: line.indexOf(res),
+							ch: line.toLowerCase().indexOf(res),
 						},
 					});
 				});
@@ -131,6 +131,7 @@ class SearchModal extends SuggestModal<SearchResult> {
 	}
 
 	onChooseSuggestion(item: SearchResult) {
+		console.log(item);
 		this.editor.setCursor(item.pos);
 		this.editor.setSelection({
 			line: item.pos.line,
