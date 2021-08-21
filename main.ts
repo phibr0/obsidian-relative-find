@@ -69,7 +69,7 @@ class SearchModal extends SuggestModal<SearchResult> {
 						text: res,
 						pos: {
 							line: i,
-							ch: res ? line.toLowerCase().indexOf(res) : line.length - 1,
+							ch: this.computeColumn(res, line),
 						},
 					});
 				});
@@ -77,6 +77,14 @@ class SearchModal extends SuggestModal<SearchResult> {
 			return this.sortSuggestions(results, mode);
 		}
 		return [];
+	}
+
+	computeColumn(res: string, line: string): number {
+		if(res) {
+			return line.toLowerCase().indexOf(this.currentQuery.toLowerCase() + res) + this.currentQuery.length;
+		} else {
+			return line.length;
+		}
 	}
 
 	sortSuggestions(suggestions: SearchResult[], mode: SearchMode): SearchResult[] {
@@ -149,7 +157,6 @@ class SearchModal extends SuggestModal<SearchResult> {
 	}
 
 	onChooseSuggestion(item: SearchResult) {
-		console.log(item);
 		this.editor.setCursor(item.pos);
 		this.editor.setSelection({
 			line: item.pos.line,
