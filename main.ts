@@ -5,7 +5,7 @@ interface SearchResult {
 	pos: CodeMirror.Position;
 }
 
-type SearchMode = "before" | "after";
+type SearchMode = ("before" | "b") | ("after" | "a");
 
 export default class BetterFindPlugin extends Plugin {
 	onload() {
@@ -13,7 +13,7 @@ export default class BetterFindPlugin extends Plugin {
 			id: 'relative-find',
 			name: 'Find relative to Cursor Position',
 			editorCallback: (editor: Editor) => {
-					new SearchModal(this.app, editor, "after").open();
+				new SearchModal(this.app, editor, "after").open();
 			}
 		});
 	}
@@ -69,7 +69,7 @@ class SearchModal extends SuggestModal<SearchResult> {
 						text: res,
 						pos: {
 							line: i,
-							ch: line.toLowerCase().indexOf(res),
+							ch: res ? line.toLowerCase().indexOf(res) : line.length - 1,
 						},
 					});
 				});
@@ -91,7 +91,25 @@ class SearchModal extends SuggestModal<SearchResult> {
 					}
 					return true;
 				});
+			case "a":
+				return suggestions.filter((s) => {
+					if (s.pos.line < line) {
+						return false;
+					} else if (s.pos.line === line && s.pos.ch < ch) {
+						return false;
+					}
+					return true;
+				});
 			case "before":
+				return suggestions.filter((s) => {
+					if (s.pos.line > line) {
+						return false;
+					} else if (s.pos.line === line && s.pos.ch > ch) {
+						return false;
+					}
+					return true;
+				}).reverse();
+			case "b":
 				return suggestions.filter((s) => {
 					if (s.pos.line > line) {
 						return false;
