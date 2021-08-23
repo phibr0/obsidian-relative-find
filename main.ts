@@ -20,8 +20,8 @@ export default class BetterFindPlugin extends Plugin {
 		for (let i = 1; i < 10; i++) {
 			this.addCommand({
 				id: 'copy-search-result-' + i,
-				name: 'Copy Search Result ' + i,
-				editorCheckCallback: (check: boolean, editor: Editor) => {
+				name: 'Copy Search Result ' + i + ' to Clipboard',
+				checkCallback: (check: boolean) => {
 					const search = this.app.workspace.getLeavesOfType("search")[0]?.view;
 					//@ts-ignore
 					if (search && search.getQuery()) {
