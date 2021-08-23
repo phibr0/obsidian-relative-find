@@ -16,6 +16,26 @@ export default class BetterFindPlugin extends Plugin {
 				new SearchModal(this.app, editor, "after").open();
 			}
 		});
+
+		for (let i = 1; i < 10; i++) {
+			this.addCommand({
+				id: 'copy-search-result-' + i,
+				name: 'Copy Search Result ' + i,
+				editorCheckCallback: (check: boolean, editor: Editor) => {
+					const search = this.app.workspace.getLeavesOfType("search")[0]?.view;
+					//@ts-ignore
+					if (search && search.getQuery()) {
+						if (!check) {
+							//@ts-ignore
+							const result = search.dom.children[i - 1].childrenEl.innerText;
+							navigator.clipboard.writeText(result);
+						}
+						return true;
+					}
+					return false;
+				}
+			});
+		}
 	}
 }
 
@@ -62,7 +82,7 @@ class SearchModal extends SuggestModal<SearchResult> {
 			this.currentQuery = query;
 			for (let i = 0; i < this.editor.lineCount(); i++) {
 				let line = this.editor.getLine(i);
-				if(!line.endsWith(" ")) {
+				if (!line.endsWith(" ")) {
 					line += " ";
 				}
 				let intermediateResults = line.toLowerCase().split(query.toLowerCase());
@@ -83,7 +103,7 @@ class SearchModal extends SuggestModal<SearchResult> {
 	}
 
 	computeColumn(res: string, line: string): number {
-		if(res) {
+		if (res) {
 			return line.toLowerCase().indexOf(this.currentQuery.toLowerCase() + res) + this.currentQuery.length;
 		} else {
 			return line.length;
