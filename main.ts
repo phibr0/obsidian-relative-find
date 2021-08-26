@@ -1,8 +1,8 @@
-import { App, Editor, Plugin, SuggestModal } from 'obsidian';
+import { App, Editor, EditorPosition, Plugin, SuggestModal } from 'obsidian';
 
 interface SearchResult {
 	text: string;
-	pos: CodeMirror.Position;
+	pos: EditorPosition;
 }
 
 type SearchMode = ("before" | "b") | ("after" | "a");
@@ -158,17 +158,15 @@ class SearchModal extends SuggestModal<SearchResult> {
 		const queryEl = createEl("span", { text: this.currentQuery, cls: "RF-query" });
 		queryEl.toggleClass("RF-has-space-end", this.currentQuery.endsWith(" "));
 
-		const resultEl = createEl("span", { text: suggestion.text, cls: "RF-result" });
+		const resultEl = el.createEl("span", { text: suggestion.text, cls: "RF-result" });
 		resultEl.toggleClass("RF-has-space-beginning", suggestion.text.startsWith(" "));
 		resultEl.prepend(queryEl);
 
-		const infoEl = createEl("span", {
+		el.createEl("span", {
 			text: `Line: ${suggestion.pos.line + 1} - Character: ${suggestion.pos.ch}`,
 			cls: "RF-info"
 		});
-
 		el.addClass("RF-suggestion");
-		el.append(resultEl, infoEl);
 	}
 
 	onNoSuggestion() {
