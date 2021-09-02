@@ -2,7 +2,7 @@
 
 > This Plugin was created by request of @arvn over on Discord
 
-This Plugin provides a new Command "Find relative to Cursor Position", to find occurences of words after or before your Cursor (or in the whole Document if you wish).
+This Plugin provides a new Command "Find relative to Cursor Position", to find occurences of words after or before your Cursor (or in the whole Document if you wish). Another (a bit unrelated) Feature was requested by @boninall, which lets you copy Search Results from Obsidian's Search Pane into your Clipboard via Command/Hotkey.
 
 ## How to install
 
