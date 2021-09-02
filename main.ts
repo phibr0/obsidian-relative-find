@@ -16,6 +16,13 @@ export default class BetterFindPlugin extends Plugin {
 				new SearchModal(this.app, editor, "after").open();
 			}
 		});
+		this.addCommand({
+			id: 'relative-find-before',
+			name: 'Find before the Cursor',
+			editorCallback: (editor: Editor) => {
+				new SearchModal(this.app, editor, "before").open();
+			}
+		});
 
 		for (let i = 1; i < 10; i++) {
 			this.addCommand({
